@@ -1,54 +1,72 @@
-const express = require('express');
-const axios = require('axios');
-const mime = require('mime');
-const morgan = require('morgan');
-const { URL } = require('url');
+// const express = require('express');
+// const axios = require('axios');
+// const mime = require('mime');
+// const morgan = require('morgan');
+// const { URL } = require('url');
+//
+// const app = express();
+// const port = process.env.PORT || 5000;
+//
+// app.use(morgan('tiny'));
+//
+// const regex = /\s+(href|src)=['"](.*?)['"]/g;
+//
+// const getMimeType = url => {
+// 	if(url.indexOf('?') !== -1) { // remove url query so we can have a clean extension
+// 		url = url.split("?")[0];
+// 	}
+// 	return mime.getType(url) || 'text/html'; // if there is no extension return as html
+// };
+//
+// app.get('/', (req, res) => {
+// 	const { url } = req.query; // get url parameter
+// 	if(!url) {
+// 		res.type('text/html');
+// 		return res.end("You need to specify <code>url</code> query parameter");
+// 	}
+//
+// 	axios.get(url, { responseType: 'arraybuffer'  }) // set response type array buffer to access raw data
+// 		.then(({ data }) => {
+// 			const urlMime = getMimeType(url); // get mime type of the requested url
+// 			if(urlMime === 'text/html') { // replace links only in html
+// 				data = data.toString().replace(regex, (match, p1, p2)=>{
+// 					let newUrl = '';
+// 					if(p2.indexOf('http') !== -1) {
+// 						newUrl = p2;
+// 					} else if (p2.substr(0,2) === '//') {
+// 						newUrl = 'http:' + p2;
+// 					} else {
+// 						const searchURL = new URL(url);
+// 						newUrl = searchURL.protocol + '//' + searchURL.host + p2;
+// 					}
+// 					return ` ${p1}="${req.protocol}://${req.hostname}?url=${newUrl}"`;
+// 				});
+// 			}
+// 			res.type(urlMime);
+// 			res.send(data);
+// 		}).catch(error => {
+// 		console.log(error);
+// 	});
+// });
+//
+// app.listen(port, () => console.log(`Listening on port ${port}!`));
+//
+// module.exports = app
 
-const app = express();
-const port = process.env.PORT || 5000;
+const app = require('express')();
+const { v4 } = require('uuid');
 
-app.use(morgan('tiny'));
-
-const regex = /\s+(href|src)=['"](.*?)['"]/g;
-
-const getMimeType = url => {
-	if(url.indexOf('?') !== -1) { // remove url query so we can have a clean extension
-		url = url.split("?")[0];
-	}
-	return mime.getType(url) || 'text/html'; // if there is no extension return as html
-};
-
-app.get('/', (req, res) => {
-	const { url } = req.query; // get url parameter
-	if(!url) {
-		res.type('text/html');
-		return res.end("You need to specify <code>url</code> query parameter");
-	}
-
-	axios.get(url, { responseType: 'arraybuffer'  }) // set response type array buffer to access raw data
-		.then(({ data }) => {
-			const urlMime = getMimeType(url); // get mime type of the requested url
-			if(urlMime === 'text/html') { // replace links only in html
-				data = data.toString().replace(regex, (match, p1, p2)=>{
-					let newUrl = '';
-					if(p2.indexOf('http') !== -1) {
-						newUrl = p2;
-					} else if (p2.substr(0,2) === '//') {
-						newUrl = 'http:' + p2;
-					} else {
-						const searchURL = new URL(url);
-						newUrl = searchURL.protocol + '//' + searchURL.host + p2;
-					}
-					return ` ${p1}="${req.protocol}://${req.hostname}?url=${newUrl}"`;
-				});
-			}
-			res.type(urlMime);
-			res.send(data);
-		}).catch(error => {
-		console.log(error);
-	});
+app.get('/api', (req, res) => {
+	const path = `/api/item/${v4()}`;
+	res.setHeader('Content-Type', 'text/html');
+	res.setHeader('Cache-Control', 's-max-age=1, stale-while-revalidate');
+	res.end(`Hello! Go to item: <a href="${path}">${path}</a>`);
 });
 
-app.listen(port, () => console.log(`Listening on port ${port}!`));
+app.get('/api/item/:slug', (req, res) => {
+	const { slug } = req.params;
+	res.end(`Item: ${slug}`);
+});
 
-module.exports = app
+module.exports = app;
+
